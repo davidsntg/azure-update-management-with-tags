@@ -16,18 +16,18 @@ This repo is a set of Runbooks that allows you to schedule Azure Virtual Machine
 
 # Global Picture
 
-
 ![BigPicture](docs/update-management-big-picture.png)
 
-Runbooks shared need the following initial bricks to work:
+Shared Runbooks need the following initial bricks to work:
 * A Log Analytics Workspace
 * An Automation Account linked to the Log Analytics Workspace
   * The Automation account must use a System-assigned Managed Identity
-  * The System-assigned Managed Identity must have **Contributor** role assigned on all subscriptions where machines can be found
+  * The System-assigned Managed Identity must have **Contributor** role 
+    * assigned on all subscriptions where machines (Azure VMs or Azure Arc Servers) can be found
+    * assigned to the Resource Group where the Automation Account is located
 * Machines that need to be patched must have:
   * Log Analytics Agent Extension installed, and linked to the Log Analytics Workspace
   * `POLICY_UPDATE` key tag declared with appropriated value
-
 
 ## `POLICY_UPDATE` syntax 
 
@@ -36,10 +36,10 @@ Here is the syntax to follow for the `POLICY_UPDATE` tag:
 ![POLICY_UPDATE Syntax](docs/tag_syntax.png) 
 
 **Examples**:
-* VM1 - `POLICY_UPDATE=Friday;10:00 PM;Never;*java*;` VM1 will be patched every Friday, at 10:00 PM. Even if updates require reboot, the VM will not be rebooted. Packages containing `java` string will be excluded.
-* VM2 - `POLICY_UPDATE=Tuesday,Sunday;08:00 AM;IfRequired;;TeamA@abc.com` VM2 will be patched every Tuesday and Sunday, at 08:00 AM. The VM will be rebooted only if a patch needs the machine to be reboot to be taken into account. No excluded packages. When patching is done, TeamA@abc.com will receive the list of updated packages by mail.
-* VM3 - `POLICY_UPDATE=Sunday;07:00 PM;Always;;` VM3 will be patched every Synday at 07:00 PM. The VM will be rebooted after applying patches, even if it is not required. No excluded packages.
-* VM4 - `POLICY_UPDATE=Monday;01:00 PM;Always;*java*,*oracle*;TeamB@abc.com` VM4 will be patched every Monday at 01:00 PM. The VM will be rebooted after applying patches. Packages containing `java` or `oracle` string will be excluded. When patching is done, TeamB@abc.com will receive the list of updated packages by mail.
+* VM1 - `POLICY_UPDATE=Friday;10:00 PM;Never;*java*;` will be patched every Friday, at 10:00 PM. Even if updates require reboot, the VM will not be rebooted. Packages containing `java` string will be excluded.
+* VM2 - `POLICY_UPDATE=Tuesday,Sunday;08:00 AM;IfRequired;;TeamA@abc.com` will be patched every Tuesday and Sunday, at 08:00 AM. The VM will be rebooted only if a patch needs the machine to be reboot to be taken into account. No excluded packages. When patching is done, TeamA@abc.com will receive the list of updated packages by mail.
+* VM3 - `POLICY_UPDATE=Sunday;07:00 PM;Always;;` will be patched every Synday at 07:00 PM. The VM will be rebooted after applying patches, even if it is not required. No excluded packages.
+* VM4 - `POLICY_UPDATE=Monday;01:00 PM;Always;*java*,*oracle*;TeamB@abc.com` will be patched every Monday at 01:00 PM. The VM will be rebooted after applying patches. Packages containing `java` or `oracle` string will be excluded. When patching is done, TeamB@abc.com will receive the list of updated packages by mail.
 
 ## Features
 
@@ -55,6 +55,7 @@ Shared Runbooks allows you to:
     * [OPTIONAL] Send a patching report email
 * Support Azure Arc Server
   * Pre-scripts and post scripts are not supported for Azure Arc Servers
+    * You can schedule Azure Arc Servers restarts using `POLICY_RESTART` tag with Runbooks available in [this repo](https://github.com/dawlysd/schedule-azure-arc-servers-restarts-with-tags)
 
 ## Unsupported scenarios
 
@@ -71,6 +72,16 @@ There is a set of 5 Runbooks that must be deployed in the Automation Account:
 * **UM-PostTasks**: Triggered after patching, it can perform several optional actions like stop VM if it was started, send patching report mail, etc..
 * **UM-CleanUp-Snapshots**: Must be scheduled daily, to delete snapshots that are X days older.
 * **UM-CleanUp-Schedules**: Must be schedule (at least) daily. It removes Update Management schedules for VM machines that not longer have the `POLICY_UPDATE` tag
+
+## Prerequisites
+
+Automation Account must have the following modules installed:
+* Az.ResourceGraph, >= 0.11.0
+* Az.ConnectedMachine >= 0.2.0
+* Az.Automation >= 1.7.1
+* Az.Compute >= 4.17.1
+
+**Note**: Runbooks must be deployed using Powershell Runtime v5.1 
 
 ## Limitations
 
