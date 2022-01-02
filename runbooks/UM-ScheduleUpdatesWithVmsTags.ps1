@@ -200,6 +200,7 @@ foreach ($vm in $vmsWithBackupPolicy) {
                 -AzureVMResourceId $vm.id `
                 -IncludedUpdateClassification Unclassified,Critical,Security,UpdateRollup,FeaturePack,ServicePack,Definition,Tools,Updates `
                 -ExcludedKbNumber $excludedPackages `
+                -RebootSetting $rebootPolicy `
                 -Duration $duration `
                 -PreTaskRunbookName $PreTaskRunbookName `
                 -PostTaskRunbookName $PostTaskRunbookName `
@@ -214,6 +215,7 @@ foreach ($vm in $vmsWithBackupPolicy) {
                 -AzureVMResourceId $vm.id `
                 -IncludedPackageClassification Critical, Security, Other, Unclassified `
                 -ExcludedPackageNameMask $excludedPackages `
+                -RebootSetting $rebootPolicy `
                 -Duration $duration `
                 -PreTaskRunbookName $PreTaskRunbookName `
                 -PostTaskRunbookName $PostTaskRunbookName `
@@ -231,6 +233,7 @@ foreach ($vm in $vmsWithBackupPolicy) {
                 -NonAzureComputer  $vm.name `
                 -IncludedUpdateClassification Unclassified,Critical,Security,UpdateRollup,FeaturePack,ServicePack,Definition,Tools,Updates `
                 -ExcludedKbNumber $excludedPackages `
+                -RebootSetting $rebootPolicy `
                 -Duration $duration `
                 -PreTaskRunbookName $PreTaskRunbookName `
                 -PostTaskRunbookName $PostTaskRunbookName `
@@ -245,6 +248,7 @@ foreach ($vm in $vmsWithBackupPolicy) {
                 -NonAzureComputer  $vm.name `
                 -IncludedPackageClassification Critical, Security, Other, Unclassified `
                 -ExcludedPackageNameMask $excludedPackages `
+                -RebootSetting $rebootPolicy `
                 -Duration $duration `
                 -PreTaskRunbookName $PreTaskRunbookName `
                 -PostTaskRunbookName $PostTaskRunbookName `
