@@ -117,7 +117,7 @@ Here is a *partial* screenshot of deployed resources:
 # Create a resource group
 $ az group create --location westeurope --name MyRg
 
-$ git clone https://github.com/dawlysd/azure-update-management-with-vm-tags
+$ git clone https://github.com/dawlysd/azure-update-management-with-tags.git
 ...
 $ cd azure-update-management-with-vm-tags/bicep/
 ```
