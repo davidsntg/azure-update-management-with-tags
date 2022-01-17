@@ -119,7 +119,7 @@ $ az group create --location westeurope --name MyRg
 
 $ git clone https://github.com/dawlysd/azure-update-management-with-tags.git
 ...
-$ cd azure-update-management-with-vm-tags/bicep/
+$ cd azure-update-management-with-tags/bicep
 ```
 
 * Deploy **without email feature**:
