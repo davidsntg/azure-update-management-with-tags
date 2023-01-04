@@ -178,8 +178,50 @@ foreach ($vm in $vmsWithBackupPolicy) {
         continue
     }
 
-    # Create Weekly Deployment Schedule
-    $schedule = New-AzAutomationSchedule -ResourceGroupName $automationAccountRg `
+    # Check is a schedule for the VM already exists
+    $schedules = Get-AzAutomationSchedule -ResourceGroupName $automationAccountRg -AutomationAccountName $automationAccountName | Where-Object {($_.Name -like "$($schedulePrefix)$($vm.name)*")}
+    $schedule = $null
+    $createOrUpdateSchedule = $false
+
+    # If a schedule for the VM already exists, check that Days&Hour defined in tags = Days&Hours defined in schedule. Update Schedule otherwise.
+    if ($schedules.Length -eq 1 -And !([string]::IsNullOrEmpty($schedules.Name)))
+    {
+        # Get schedule details
+        $schedule = Get-AzAutomationSchedule -ResourceGroupName $automationAccountRg -AutomationAccountName $automationAccountName -Name $schedules.Name
+
+        # Check if Days between those defined in existing schedule are equal to those defined in vm tags
+        $automationScheduleDaysOfWeek = $schedule.WeeklyScheduleOptions.DaysOfWeek | Sort-Object
+        $automationScheduleDaysOfWeek = $automationScheduleDaysOfWeek -join ", "
+
+        $DaysOfWeekSorted = $DaysOfWeek | Sort-Object
+        $DaysOfWeekSorted = $DaysOfWeekSorted -join ', ' 
+
+        if ($automationScheduleDaysOfWeek -ne $DaysOfWeekSorted)
+        {
+            Write-Output "Days between those defined in existing schedule and days defined tags are different. Existing schedule will be updated."
+            $createOrUpdateSchedule = $true
+        }
+
+        # Check if hour:minute between those defined in existing schedule are equal to those defined in vm tags
+        $automationScheduleNextRunDateTime = $schedule.NextRun.DateTime
+        $diff = New-TimeSpan -Start (Get-Date $startTime) -End $automationScheduleNextRunDateTime
+
+        if ($diff.Hours -ne 0 -Or $diff.Minutes -ne 0)
+        {
+            Write-Output "hour:minute between those defined in existing schedule are equal to those defined in vm tags. Existing schedule will be updated."
+            $createOrUpdateSchedule = $true
+        }
+    }
+    else
+    {
+        # New VM detected : a schedule must be created
+        $createOrUpdateSchedule = $true 
+    }
+
+    
+    if ($createOrUpdateSchedule)
+    {
+        $schedule = New-AzAutomationSchedule -ResourceGroupName $automationAccountRg `
         -AutomationAccountName $automationAccountName `
         -Name "$($schedulePrefix)$($vm.name)" `
         -StartTime $startTime `
@@ -187,7 +229,9 @@ foreach ($vm in $vmsWithBackupPolicy) {
         -DaysOfWeek $DaysOfWeek `
         -WeekInterval 1 `
         -ForUpdateConfiguration
-
+    } else {
+        $schedule.Name = "$($schedulePrefix)$($vm.name)"
+    }
     # Azure VM
     if ($vm.vmType -eq "Azure")
     {
