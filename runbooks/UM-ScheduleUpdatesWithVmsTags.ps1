@@ -208,7 +208,7 @@ foreach ($vm in $vmsWithBackupPolicy) {
 
         if ($diff.Hours -ne 0 -Or $diff.Minutes -ne 0)
         {
-            Write-Output "hour:minute between those defined in existing schedule are equal to those defined in vm tags. Existing schedule will be updated."
+            Write-Output "hour:minute between those defined in existing schedule are different to those defined in vm tags. Existing schedule will be updated."
             $createOrUpdateSchedule = $true
         }
     }
