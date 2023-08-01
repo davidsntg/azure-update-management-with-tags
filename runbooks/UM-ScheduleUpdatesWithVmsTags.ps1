@@ -11,6 +11,7 @@
 
 # Example #1 - POLICY_UPDATE: Sunday;05h20 PM;Always;*java*,*nagios*;
 # Example #2 - POLICY_UPDATE: Friday;07h00 PM;IfRequired;;TeamA@abc.com
+# Example #3 - POLICY_UPDATE: Thursday;08h00 PM;Never;;TeamA@abc.com;GMT Standard Time
 
 # rebootPolicy possible values: Always, Never, IfRequired
 # excludedPackages: optional parameter, comma separated if multiple.
@@ -37,8 +38,11 @@ $onboardAzureArcServersEnabled = $true
 # Maintenance window (minutes) to perform patching. Minimum: 30 minutes. Maximum: 6 hours 
 $duration = New-TimeSpan -Hours 2
 
+# Default timezone if no other is chosen
+$DefaultTimezone = 'Romance Standard Time'
+
 # TimeZone - Can be the IANA ID or the Windows Time Zone ID
-$timezone = "Romance Standard Time" # France - Central European Time
+$timezone = @("GMT Standard Time", "Romance Standard Time", "AUS Eastern Standard Time") # "Romance Standard Time" = France - Central European Time
 
 # Deployment Schedule name Prefix. Must be the same used on Updatemanagement-CleanUpSchedules Runbook.
 $schedulePrefix = "ScheduledByTags-"
@@ -168,6 +172,15 @@ foreach ($vm in $vmsWithBackupPolicy) {
         $reportingMailHash = @{"DestinationMail" = $reportingMail ; "ScheduleName" = "$($schedulePrefix)$($vm.name)" }
     }
     
+    $tz = $vm.policy_update.Split(";")[5]
+    if ($tz) {
+        $timezone = $tz
+    }
+    else {
+        Write-Warning "No Timezone specified, defaulting to: $DefaultTimezone"
+        $timezone = $DefaultTimezone
+    }
+
     if (!$PreTaskRunbookName) { $PreTaskRunbookName = $null }
     if (!$PostTaskRunbookName) { $PostTaskRunbookName = $null }
 
